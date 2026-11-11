@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "shipsane": {
+      "command": "npx",
+      "args": ["-y", "shipsane", "mcp"]
+    }
+  }
+}

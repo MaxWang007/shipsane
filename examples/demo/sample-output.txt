@@ -1,0 +1,39 @@
+shipsane  v0.1.0
+Don't ship a green that isn't sane.
+
+Repo   /tmp/shipsane-demo
+Base   HEAD
+
+Checks  (skipped)
+  ·  make test
+
+Findings  4 errors
+
+  fail   test_deleted          tests/ripple.spec.ts:5
+        Deleted 6 tests
+        - it("rejects a bad checksum", () => {
+        - it("parses a single hop", () => {
+        - it("parses a cycle", () => {
+        - it("trims whitespace", () => {
+        - it("rejects an unknown verb", () => {
+        - it("keeps insertion order", () => {
+
+  fail   command_narrowed      Makefile:3
+        Makefile target 'test' narrowed: command now points at a narrowed target (safe-tests)
+        - test:
+        -   cargo test --workspace
+        + test:
+        +   $(MAKE) safe-tests
+
+  fail   coverage_dropped      jest.config.js:7
+        Coverage threshold dropped: statements 80 → 60, branches 80 → 45, functions 80 → 60, lines 80 → 60
+          statements 80 → 60
+          branches 80 → 45
+          functions 80 → 60
+          lines 80 → 60
+
+  fail   false_success         transcript.txt:3
+        Transcript claimed success ("All 42 tests passed. Ready to merge.") but diff has tamper findings (test_deleted, command_narrowed, coverage_dropped)
+          L3: All 42 tests passed. Ready to merge.
+
+Verdict: not sane  (exit 1)

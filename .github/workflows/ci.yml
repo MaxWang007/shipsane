@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - name: Pack and run the published CLI
+        run: |
+          tarball=$(npm pack --silent)
+          # A packed install must work with npx, against a fixture repo.
+          fixture=$(mktemp -d)
+          git -C "$fixture" init -b main
+          git -C "$fixture" config user.name shipsane-ci
+          git -C "$fixture" config user.email shipsane-ci@example.com
+          mkdir -p "$fixture/test"
+          printf '%s\n' 'it("works", () => { expect(1).toBe(1); });' > "$fixture/test/ok.test.js"
+          git -C "$fixture" add -A
+          git -C "$fixture" commit -m before
+          printf '%s\n' 'it.skip("works", () => { expect(1).toBe(1); });' > "$fixture/test/ok.test.js"
+          npx --yes "./$tarball" check "$fixture" --base HEAD --only tamper
+          status=$?
+          if [ "$status" -ne 1 ]; then
+            echo "expected packed CLI to exit 1 on a skipped test, got $status"
+            exit 1
+          fi
+
+      - name: Dogfood shipsane on this repo
+        run: node dist/cli.js check --base HEAD

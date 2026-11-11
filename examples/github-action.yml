@@ -1,0 +1,18 @@
+# Drop this into .github/workflows/shipsane.yml
+name: shipsane
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: MaxWang007/shipsane@v0
+        with:
+          base: ${{ github.event.pull_request.base.sha || github.event.before }}
