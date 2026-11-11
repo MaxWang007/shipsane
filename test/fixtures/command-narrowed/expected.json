@@ -1,0 +1,8 @@
+{
+  "findings": [
+    {
+      "rule": "command_narrowed",
+      "path": "Makefile"
+    }
+  ]
+}

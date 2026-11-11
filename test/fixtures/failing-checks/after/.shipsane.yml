@@ -1,0 +1,2 @@
+commands:
+  - node -e "console.log('OK'); console.log('all tests passed'); process.exit(1)"

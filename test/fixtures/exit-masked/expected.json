@@ -1,0 +1,8 @@
+{
+  "findings": [
+    {
+      "rule": "exit_masking",
+      "path": "package.json"
+    }
+  ]
+}

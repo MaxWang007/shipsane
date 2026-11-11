@@ -1,0 +1,8 @@
+{
+  "findings": [
+    {
+      "rule": "assertion_weakened",
+      "path": "test/math.test.js"
+    }
+  ]
+}

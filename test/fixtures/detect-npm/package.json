@@ -1,0 +1,9 @@
+{
+  "name": "demo-npm",
+  "scripts": {
+    "test": "node --test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "build": "tsc"
+  }
+}

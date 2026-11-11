@@ -1,0 +1,8 @@
+{
+  "findings": [
+    {
+      "rule": "test_deleted",
+      "path": "tests/ripple.spec.ts"
+    }
+  ]
+}

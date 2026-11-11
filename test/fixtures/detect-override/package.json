@@ -1,0 +1,7 @@
+{
+  "name": "demo-override",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint ."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "commands": [
+    {
+      "command": "ctest --output-on-failure",
+      "exitCode": 8,
+      "output": "The following tests FAILED:\\n\\t25 - RippleChecksum.BadInput (Failed)\\nErrors while running CTest\\n",
+      "timedOut": false,
+      "durationMs": 400
+    }
+  ]
+}

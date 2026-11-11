@@ -1,0 +1,4 @@
+allow:
+  - path: test/spec.test.js
+    rule: assertion_weakened
+    reason: "Spec change in #42: default timeout is now 60 seconds"

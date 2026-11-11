@@ -1,0 +1,8 @@
+{
+  "findings": [
+    {
+      "rule": "skip_added",
+      "path": "test/ripple.test.js"
+    }
+  ]
+}

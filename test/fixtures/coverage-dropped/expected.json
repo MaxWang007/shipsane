@@ -1,0 +1,8 @@
+{
+  "findings": [
+    {
+      "rule": "coverage_dropped",
+      "path": "jest.config.js"
+    }
+  ]
+}

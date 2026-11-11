@@ -1,0 +1,2 @@
+commands:
+  - ctest --output-on-failure
