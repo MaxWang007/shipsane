@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+*.log
+.DS_Store
+.shipsane/last-run.json
+tmp/

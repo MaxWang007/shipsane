@@ -1,0 +1,66 @@
+{
+  "name": "shipsane",
+  "version": "0.1.0",
+  "description": "Don't ship a green that isn't sane — catch coding agents that rewrite, skip, or shrink tests, or claim a passing suite that never actually passed.",
+  "keywords": [
+    "cli",
+    "testing",
+    "ci",
+    "git",
+    "mcp",
+    "coding-agents",
+    "verification"
+  ],
+  "author": "MaxWang007",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MaxWang007/shipsane.git"
+  },
+  "homepage": "https://github.com/MaxWang007/shipsane",
+  "bugs": {
+    "url": "https://github.com/MaxWang007/shipsane/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "shipsane": "dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "action.yml",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx --test test/**/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm test && npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "commander": "^12.1.0",
+    "picocolors": "^1.1.1",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "@types/node": "^22.10.0",
+    "eslint": "^9.16.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.16.0"
+  }
+}
