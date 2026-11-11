@@ -1,0 +1,54 @@
+name: shipsane
+description: Re-run the repo's real checks and scan the diff for skipped, deleted, or weakened tests.
+author: MaxWang007
+branding:
+  icon: shield
+  color: red
+inputs:
+  base:
+    description: Git ref to diff against. Defaults to shipsane's own auto-detection.
+    required: false
+    default: ""
+  only:
+    description: 'Run only "tamper" or only "checks".'
+    required: false
+    default: ""
+  timeout:
+    description: Per-command timeout in seconds.
+    required: false
+    default: ""
+  fail-on-warning:
+    description: Treat warnings (including allowlisted findings) as failures.
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+    - name: Install and build shipsane
+      shell: bash
+      run: |
+        cd "${{ github.action_path }}"
+        if [ -f package-lock.json ]; then npm ci; else npm install; fi
+        npm run build
+    - name: Run shipsane
+      shell: bash
+      run: |
+        set -euo pipefail
+        args=(check --markdown)
+        if [ -n "${{ inputs.base }}" ]; then
+          args+=(--base "${{ inputs.base }}")
+        fi
+        if [ -n "${{ inputs.only }}" ]; then
+          args+=(--only "${{ inputs.only }}")
+        fi
+        if [ -n "${{ inputs.timeout }}" ]; then
+          args+=(--timeout "${{ inputs.timeout }}")
+        fi
+        if [ "${{ inputs.fail-on-warning }}" = "true" ]; then
+          args+=(--fail-on-warning)
+        fi
+        node "${{ github.action_path }}/dist/cli.js" "${args[@]}"
