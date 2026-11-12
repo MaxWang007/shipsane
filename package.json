@@ -44,9 +44,9 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "tsx --test test/**/*.test.ts",
+    "test": "node scripts/run-tests.mjs",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src test",
+    "lint": "eslint src test scripts",
     "prepublishOnly": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "dependencies": {

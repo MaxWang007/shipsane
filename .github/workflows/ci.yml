@@ -41,8 +41,11 @@ jobs:
           git -C "$fixture" add -A
           git -C "$fixture" commit -m before
           printf '%s\n' 'it.skip("works", () => { expect(1).toBe(1); });' > "$fixture/test/ok.test.js"
-          npx --yes "./$tarball" check "$fixture" --base HEAD --only tamper
-          status=$?
+          # Actions runs this with `bash -e`, which would abort on the expected
+          # exit 1 before the comparison below could accept it. A status other
+          # than 1 (including a clean 0) is still a failure.
+          status=0
+          npx --yes "./$tarball" check "$fixture" --base HEAD --only tamper || status=$?
           if [ "$status" -ne 1 ]; then
             echo "expected packed CLI to exit 1 on a skipped test, got $status"
             exit 1
