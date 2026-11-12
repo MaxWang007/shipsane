@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## Unreleased
+
+- GitHub Action: ignore an all-zero `base` (first push of a branch), and write findings as workflow annotations plus a job summary so they show up with a file and line.
+- Pre-push hook now diffs against the remote SHA being updated (or auto-detects the default branch on a new branch) instead of `HEAD`, so already-committed tampering is actually caught. Re-run `shipsane hook install` to replace an older hook.
+
 ## 0.1.0 — 2026-11-12
 
 Initial release.

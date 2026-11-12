@@ -1,4 +1,12 @@
 # Drop this into .github/workflows/shipsane.yml
+#
+# Findings appear as workflow annotations (file and line) and in the job
+# summary. An all-zero `base` (first push of a new branch) is ignored, and
+# shipsane then auto-detects the default branch.
+#
+# If this workflow already ran the test suite, pass `only: tamper` so
+# shipsane does not run the same commands again. Leave `only` unset to
+# also re-run them as an independent gate.
 name: shipsane
 
 on:
@@ -15,4 +23,6 @@ jobs:
 
       - uses: MaxWang007/shipsane@v0
         with:
+          # PR: diff against the PR base. Push: diff against the previous tip.
           base: ${{ github.event.pull_request.base.sha || github.event.before }}
+          # only: tamper

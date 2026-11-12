@@ -48,10 +48,11 @@ export function git(cwd: string, args: string[]): SpawnResult {
   };
 }
 
-export function runCli(args: string[], cwd?: string, env?: NodeJS.ProcessEnv): SpawnResult {
+export function runCli(args: string[], cwd?: string, env?: NodeJS.ProcessEnv, input?: string): SpawnResult {
   const result = spawnSync(process.execPath, ["--import", TSX_LOADER, CLI, ...args], {
     cwd: cwd ?? REPO_ROOT,
     encoding: "utf8",
+    input,
     env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0", ...(env ?? {}) },
   });
   return {

@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formatReport, toJson } from "../src/report.js";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { formatGitHubAnnotations, formatReport, toJson, writeGitHubOutputs } from "../src/report.js";
 import type { ShipsaneReport } from "../src/types.js";
 
 function sample(): ShipsaneReport {
@@ -59,4 +62,40 @@ test("pretty report includes a copyable verdict line", () => {
   assert.match(text, /Verdict: not sane\s+\(exit 1\)/);
   assert.match(text, /test_deleted/);
   assert.match(text, /tests\/ripple\.spec\.ts:12/);
+});
+
+test("GitHub annotations include file, line, and rule for each finding", () => {
+  const out = formatGitHubAnnotations(sample());
+  assert.match(out, /::error /);
+  assert.match(out, /file=tests\/ripple\.spec\.ts/);
+  assert.match(out, /line=12/);
+  assert.match(out, /title=shipsane%3A test_deleted/);
+  assert.match(out, /Deleted 6 tests/);
+  assert.doesNotMatch(out, /\n(?!$)/); // a single trailing newline is ok; raw newlines are escaped
+});
+
+test("writeGitHubOutputs is a no-op outside GitHub Actions", () => {
+  const chunks: string[] = [];
+  writeGitHubOutputs(sample(), { GITHUB_ACTIONS: "false" }, (c) => chunks.push(c));
+  assert.deepEqual(chunks, []);
+});
+
+test("writeGitHubOutputs emits annotations and a step summary in Actions", () => {
+  const dir = mkdtempSync(join(tmpdir(), "shipsane-gha-"));
+  const summary = join(dir, "summary.md");
+  const chunks: string[] = [];
+  writeGitHubOutputs(
+    sample(),
+    { GITHUB_ACTIONS: "true", GITHUB_STEP_SUMMARY: summary },
+    (c) => chunks.push(c),
+  );
+  try {
+    assert.match(chunks.join(""), /::error /);
+    assert.match(chunks.join(""), /file=tests\/ripple\.spec\.ts/);
+    const md = readFileSync(summary, "utf8");
+    assert.match(md, /shipsane report/);
+    assert.match(md, /tests\/ripple\.spec\.ts:12/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

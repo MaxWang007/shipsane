@@ -105,15 +105,40 @@ test("explain unknown rule exits 2", () => {
   assert.match(result.stderr, /Unknown rule/);
 });
 
-test("hook install writes a hook that invokes shipsane check --base HEAD", () => {
+test("hook install writes a v2 hook that delegates to shipsane hook run", () => {
   const dir = trackTemp(loadFixtureRepo("clean-pass"));
-  const result = runCli(["hook", "install", "--pre-commit"], dir);
+  const result = runCli(["hook", "install", "--pre-commit", "--pre-push"], dir);
   assert.equal(result.status, 0, result.stderr || result.stdout);
-  const hook = join(dir, ".git", "hooks", "pre-commit");
-  assert.ok(existsSync(hook));
-  const body = readFileSync(hook, "utf8");
-  assert.match(body, /shipsane-hook-v1/);
-  assert.match(body, /shipsane check --base HEAD/);
+  const preCommit = readFileSync(join(dir, ".git", "hooks", "pre-commit"), "utf8");
+  const prePush = readFileSync(join(dir, ".git", "hooks", "pre-push"), "utf8");
+  assert.match(preCommit, /shipsane-hook-v2/);
+  assert.match(preCommit, /shipsane hook run pre-commit/);
+  assert.match(prePush, /shipsane hook run pre-push/);
+  assert.doesNotMatch(prePush, /--base HEAD/);
+});
+
+test("hook run pre-push diffs against the remote SHA, not HEAD", () => {
+  const dir = trackTemp(loadFixtureRepo("skip-added"));
+  // Give the hook a cheap passing command so a missing test script does not
+  // turn this into an exit 2. Commit that first so it is not part of the push.
+  writeFileSync(join(dir, ".shipsane.yml"), "commands:\n  - \"true\"\n");
+  git(dir, ["add", ".shipsane.yml"]);
+  const baseline = git(dir, ["commit", "-m", "add commands"]);
+  assert.equal(baseline.status, 0, baseline.stderr);
+  const shaBefore = git(dir, ["rev-parse", "HEAD"]).stdout.trim();
+  // The fixture left the skip uncommitted. Commit it so a --base HEAD check
+  // would see an empty diff, which is what a broken pre-push did.
+  git(dir, ["add", "-A"]);
+  const committed = git(dir, ["commit", "-m", "agent skipped a test"]);
+  assert.equal(committed.status, 0, committed.stderr);
+  const shaAfter = git(dir, ["rev-parse", "HEAD"]).stdout.trim();
+  const stdin = `refs/heads/main ${shaAfter} refs/heads/main ${shaBefore}\n`;
+  const headCheck = runCli(["check", dir, "--base", "HEAD", "--only", "tamper"]);
+  assert.equal(headCheck.status, 0, headCheck.stderr || headCheck.stdout);
+  const result = runCli(["hook", "run", "pre-push"], dir, undefined, stdin);
+  assert.equal(result.status, 1, result.stderr || result.stdout);
+  assert.match(result.stdout, /skip_added/);
+  assert.match(result.stdout, /Verdict: not sane/);
 });
 
 test("hook uninstall removes only shipsane hooks", () => {

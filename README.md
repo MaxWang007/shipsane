@@ -33,7 +33,22 @@ npx shipsane mcp
 
 Add a stdio MCP server to Claude Code with `{ "command": "npx", "args": ["-y", "shipsane", "mcp"] }` (see [examples/mcp.claude.json](examples/mcp.claude.json)) and tell the agent, or a parent reviewer, to call `shipsane_check` before declaring done.
 
-A GitHub Action lives in this repo: `uses: MaxWang007/shipsane@v0`. A ready-made workflow is in [examples/github-action.yml](examples/github-action.yml).
+## GitHub Action
+
+Copy [examples/github-action.yml](examples/github-action.yml) to `.github/workflows/shipsane.yml`:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+- uses: MaxWang007/shipsane@v0
+  with:
+    base: ${{ github.event.pull_request.base.sha || github.event.before }}
+```
+
+`@v0` is the latest 0.x source tag of this repo. Findings show up as workflow annotations (file and line) and in the job summary, not only in the raw log. The action ignores an all-zero `base` — that is what GitHub sends as `github.event.before` on the first push of a branch — and falls back to shipsane's auto-detected default branch.
+
+If this job already ran your test suite, pass `only: tamper` so shipsane does not run the same commands again. The diff scan is the part a green check mark cannot see. Leave `only` unset to also re-run the commands as an independent gate.
 
 ## Quickstart
 
@@ -112,6 +127,8 @@ npx shipsane --base HEAD --only tamper --transcript transcript.txt
 ## What it does not do
 
 shipsane is not a substitute for code review. It cannot see a cheat that was committed and then reverted before the hook ran. It does not use a model to judge whether a new assertion is "weaker" in some subtle semantic sense — only deterministic diffs, so the same input always produces the same report.
+
+The pre-commit hook diffs uncommitted changes against `HEAD`. The pre-push hook diffs the commits being pushed against the remote tip (or, on a new branch, the auto-detected default branch). A hook installed from an earlier snapshot always used `--base HEAD`, which misses already-committed tampering at push time; run `npx shipsane hook install` again to replace a shipsane hook.
 
 ## How it works
 

@@ -3,9 +3,37 @@ import { join } from "node:path";
 import { findGitRoot } from "./git.js";
 import { ShipsaneError } from "./types.js";
 
-export const HOOK_MARKER = "# shipsane-hook-v1 -- do not edit; installed by `shipsane hook install`";
+/** Written into installed hooks. Older v1 hooks are still recognized and replaced. */
+export const HOOK_MARKER = "# shipsane-hook-v2 -- do not edit; installed by `shipsane hook install`";
 
 export type HookName = "pre-commit" | "pre-push";
+
+const ZERO_SHA = /^0+$/;
+
+export function isShipsaneHook(contents: string): boolean {
+  return /shipsane-hook-v\d+/.test(contents);
+}
+
+/**
+ * Decide the git base an installed hook should pass to `shipsane check`.
+ *
+ * pre-commit compares the worktree to HEAD (uncommitted changes).
+ * pre-push compares the commits being pushed to the remote tip supplied on
+ * stdin. An all-zero remote SHA means a new branch: leave `base` unset so
+ * shipsane auto-detects the upstream default branch, instead of diffing
+ * against HEAD (which is a no-op once the worktree is clean).
+ */
+export function resolveHookBase(kind: HookName, stdin = ""): { base?: string } {
+  if (kind === "pre-commit") return { base: "HEAD" };
+  for (const raw of stdin.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    const parts = line.split(/[ \t]+/);
+    const remoteSha = parts[3] ?? "";
+    if (remoteSha && !ZERO_SHA.test(remoteSha)) return { base: remoteSha };
+  }
+  return {};
+}
 
 function hookBody(kind: HookName): string {
   return `#!/bin/sh
@@ -14,11 +42,11 @@ ${HOOK_MARKER}
 set -e
 here=$(git rev-parse --show-toplevel)
 if command -v shipsane >/dev/null 2>&1; then
-  exec shipsane check --base HEAD
+  exec shipsane hook run ${kind}
 elif [ -x "$here/node_modules/.bin/shipsane" ]; then
-  exec "$here/node_modules/.bin/shipsane" check --base HEAD
+  exec "$here/node_modules/.bin/shipsane" hook run ${kind}
 else
-  exec npx --yes shipsane check --base HEAD
+  exec npx --yes shipsane hook run ${kind}
 fi
 `;
 }
@@ -29,10 +57,6 @@ function hooksDir(gitRoot: string): string {
 
 function hookPath(gitRoot: string, name: HookName): string {
   return join(hooksDir(gitRoot), name);
-}
-
-export function isShipsaneHook(contents: string): boolean {
-  return contents.includes("shipsane-hook-v1");
 }
 
 export function installHooks(cwd: string, names: HookName[]): { installed: HookName[]; paths: string[] } {
